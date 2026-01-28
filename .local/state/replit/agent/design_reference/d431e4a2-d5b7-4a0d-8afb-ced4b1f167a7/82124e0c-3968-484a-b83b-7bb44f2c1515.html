@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TutorTrack - Timesheet Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                    chart: {
+                        "1": "var(--chart-1)",
+                        "2": "var(--chart-2)",
+                        "3": "var(--chart-3)",
+                        "4": "var(--chart-4)",
+                        "5": "var(--chart-5)",
+                    }
+                },
+                fontFamily: {
+                    sans: ["Inter", "system-ui", "sans-serif"],
+                }
+            },
+        }
+    };
+    </script>
+    <style>
+        :root {
+            --background: hsl(210 40% 98%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(221.2 83.2% 53.3%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222.2 84% 4.9%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(210 40% 96%);
+            --accent-foreground: hsl(222.2 84% 4.9%);
+            --destructive: hsl(0 84.2% 60.2%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(221.2 83.2% 53.3%);
+            --radius: 0.5rem;
+            --chart-1: hsl(12 76% 61%);
+            --chart-2: hsl(173 58% 39%);
+            --chart-3: hsl(197 37% 24%);
+            --chart-4: hsl(43 74% 66%);
+            --chart-5: hsl(27 87% 67%);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans">
+    <!-- @COMPONENT: Header [Navigation and role switching] -->
+    <header class="bg-card border-b border-border shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-graduation-cap text-primary text-2xl"></i>
+                        <h1 class="text-xl font-bold text-foreground">TutorTrack</h1>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Role Switcher -->
+                    <div class="bg-secondary rounded-lg p-1 flex">
+                        <button id="tutorRole" class="px-3 py-1 rounded-md text-sm font-medium bg-primary text-primary-foreground transition-all">
+                            <i class="fas fa-user-tie mr-2"></i>Tutor
+                        </button>
+                        <button id="adminRole" class="px-3 py-1 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-all">
+                            <i class="fas fa-user-shield mr-2"></i>Admin
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-primary-foreground text-sm"></i>
+                        </div>
+                        <span class="text-sm font-medium" data-bind="user.name">Sarah Johnson</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- @COMPONENT: TutorDashboard [Main tutor interface] -->
+        <div id="tutorView" class="space-y-8">
+            <!-- Tutor Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">This Week's Earnings</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="tutor.weeklyEarnings">$342.50</p>
+                        </div>
+                        <div class="w-12 h-12 bg-chart-2/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-chart-2"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Sessions This Week</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="tutor.weeklyLessons">14</p>
+                        </div>
+                        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-clock text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Active Students</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="tutor.activeStudents">8</p>
+                        </div>
+                        <div class="w-12 h-12 bg-chart-1/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-chart-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Timesheet Entry Form -->
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <h2 class="text-lg font-semibold text-foreground mb-6 flex items-center">
+                        <i class="fas fa-plus-circle text-primary mr-2"></i>
+                        Log Teaching Session
+                    </h2>
+                    
+                    <form class="space-y-4">
+                        <!-- Student Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Student</label>
+                            <select class="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-implementation="Populate from student list">
+                                <option data-mock="true">Select a student...</option>
+                                <option data-mock="true">Emma Watson - Math (5 sessions left)</option>
+                                <option data-mock="true">James Smith - Physics (12 sessions left)</option>
+                                <option data-mock="true">Olivia Johnson - Chemistry (3 sessions left) ⚠️</option>
+                                <option data-mock="true">Liam Brown - Biology (8 sessions left)</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Date Taught</label>
+                            <input type="date" class="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-bind="session.date">
+                        </div>
+
+                        <!-- Duration -->
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Duration (hours)</label>
+                            <input type="number" value="1" step="0.25" min="0.25" class="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-bind="session.duration">
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Session Notes (Optional)</label>
+                            <textarea class="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring h-20" placeholder="Topics covered, homework assigned..." data-bind="session.notes"></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition-colors font-medium" data-event="click:submitTimesheet">
+                            <i class="fas fa-save mr-2"></i>
+                            Log Session
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <h2 class="text-lg font-semibold text-foreground mb-6 flex items-center justify-between">
+                        <span><i class="fas fa-history text-primary mr-2"></i>Recent Sessions</span>
+                        <button class="text-sm text-primary hover:text-primary/80">View All</button>
+                    </h2>
+
+                    <div class="space-y-4">
+                        <!-- @MAP: recentSessions.map(session => ( -->
+                        <div class="flex items-center justify-between p-3 bg-muted/30 rounded-md" data-mock="true">
+                            <div class="flex-1">
+                                <p class="font-medium text-foreground">Emma Watson - Math</p>
+                                <p class="text-sm text-muted-foreground">Dec 18, 2024 • 1.0 hours</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-chart-2">$25.00</p>
+                                <p class="text-xs text-muted-foreground">Approved</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-muted/30 rounded-md" data-mock="true">
+                            <div class="flex-1">
+                                <p class="font-medium text-foreground">James Smith - Physics</p>
+                                <p class="text-sm text-muted-foreground">Dec 17, 2024 • 1.5 hours</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-chart-2">$45.00</p>
+                                <p class="text-xs text-muted-foreground">Approved</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-muted/30 rounded-md" data-mock="true">
+                            <div class="flex-1">
+                                <p class="font-medium text-foreground">Olivia Johnson - Chemistry</p>
+                                <p class="text-sm text-muted-foreground">Dec 16, 2024 • 1.0 hours</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-chart-4">$30.00</p>
+                                <p class="text-xs text-muted-foreground">Pending</p>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Summary -->
+            <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                <h2 class="text-lg font-semibold text-foreground mb-6 flex items-center justify-between">
+                    <span><i class="fas fa-chart-bar text-primary mr-2"></i>Weekly Summary</span>
+                    <select class="text-sm border border-border rounded-md px-3 py-1" data-implementation="Week selector">
+                        <option>Current Week (Dec 16-22, 2024)</option>
+                        <option>Previous Week (Dec 9-15, 2024)</option>
+                    </select>
+                </h2>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-3 font-medium text-foreground">Date</th>
+                                <th class="text-left py-3 font-medium text-foreground">Student</th>
+                                <th class="text-left py-3 font-medium text-foreground">Subject</th>
+                                <th class="text-right py-3 font-medium text-foreground">Duration</th>
+                                <th class="text-right py-3 font-medium text-foreground">Earnings</th>
+                                <th class="text-center py-3 font-medium text-foreground">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- @MAP: weeklyData.map(entry => ( -->
+                            <tr class="border-b border-border/50" data-mock="true">
+                                <td class="py-3 text-muted-foreground">Dec 18</td>
+                                <td class="py-3">Emma Watson</td>
+                                <td class="py-3">Math</td>
+                                <td class="py-3 text-right">1.0h</td>
+                                <td class="py-3 text-right font-medium">$25.00</td>
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-1 bg-chart-2/10 text-chart-2 rounded-full text-xs">Approved</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-border/50" data-mock="true">
+                                <td class="py-3 text-muted-foreground">Dec 17</td>
+                                <td class="py-3">James Smith</td>
+                                <td class="py-3">Physics</td>
+                                <td class="py-3 text-right">1.5h</td>
+                                <td class="py-3 text-right font-medium">$45.00</td>
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-1 bg-chart-2/10 text-chart-2 rounded-full text-xs">Approved</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-border/50" data-mock="true">
+                                <td class="py-3 text-muted-foreground">Dec 16</td>
+                                <td class="py-3">Olivia Johnson</td>
+                                <td class="py-3">Chemistry</td>
+                                <td class="py-3 text-right">1.0h</td>
+                                <td class="py-3 text-right font-medium">$30.00</td>
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-1 bg-chart-4/10 text-chart-4 rounded-full text-xs">Pending</span>
+                                </td>
+                            </tr>
+                            <!-- @END_MAP )) -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-t-2 border-border bg-muted/30">
+                                <td colspan="4" class="py-3 font-semibold">Total This Week</td>
+                                <td class="py-3 text-right font-bold text-lg text-foreground">$342.50</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: TutorDashboard -->
+
+        <!-- @COMPONENT: AdminDashboard [Admin management interface] -->
+        <div id="adminView" class="space-y-8 hidden">
+            <!-- Admin Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Total Revenue</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="admin.totalRevenue">$2,847.50</p>
+                        </div>
+                        <div class="w-12 h-12 bg-chart-2/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-chart-line text-chart-2"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Active Students</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="admin.activeStudents">24</p>
+                        </div>
+                        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-graduate text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Active Tutors</p>
+                            <p class="text-2xl font-bold text-foreground" data-bind="admin.activeTutors">6</p>
+                        </div>
+                        <div class="w-12 h-12 bg-chart-1/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-chart-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card p-6 rounded-lg border border-border shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-muted-foreground text-sm">Low Balance Alerts</p>
+                            <p class="text-2xl font-bold text-destructive" data-bind="admin.lowBalanceAlerts">3</p>
+                        </div>
+                        <div class="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-destructive"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Navigation Tabs -->
+            <div class="bg-card rounded-lg border border-border shadow-sm">
+                <div class="border-b border-border">
+                    <nav class="flex">
+                        <button class="px-6 py-4 text-sm font-medium border-b-2 border-primary text-primary" data-tab="students">
+                            <i class="fas fa-user-graduate mr-2"></i>Students & Sessions
+                        </button>
+                        <button class="px-6 py-4 text-sm font-medium text-muted-foreground hover:text-foreground" data-tab="rates">
+                            <i class="fas fa-dollar-sign mr-2"></i>Rate Management
+                        </button>
+                        <button class="px-6 py-4 text-sm font-medium text-muted-foreground hover:text-foreground" data-tab="timesheets">
+                            <i class="fas fa-clipboard-list mr-2"></i>Timesheet Review
+                        </button>
+                        <button class="px-6 py-4 text-sm font-medium text-muted-foreground hover:text-foreground" data-tab="invoices">
+                            <i class="fas fa-file-invoice mr-2"></i>Invoices & Payments
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Students & Sessions Tab -->
+                <div id="studentsTab" class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Students & Session Management</h3>
+                        <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add Student
+                        </button>
+                    </div>
+
+                    <!-- Students Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-border bg-muted/30">
+                                    <th class="text-left py-3 px-4 font-medium">Student Name</th>
+                                    <th class="text-left py-3 px-4 font-medium">Subject</th>
+                                    <th class="text-left py-3 px-4 font-medium">Tutor</th>
+                                    <th class="text-center py-3 px-4 font-medium">Sessions Remaining</th>
+                                    <th class="text-right py-3 px-4 font-medium">Parent Rate</th>
+                                    <th class="text-right py-3 px-4 font-medium">Tutor Rate</th>
+                                    <th class="text-center py-3 px-4 font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @MAP: students.map(student => ( -->
+                                <tr class="border-b border-border/50 hover:bg-muted/20" data-mock="true">
+                                    <td class="py-3 px-4 font-medium">Emma Watson</td>
+                                    <td class="py-3 px-4">Math</td>
+                                    <td class="py-3 px-4">Sarah Johnson</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="px-3 py-1 bg-chart-2/10 text-chart-2 rounded-full text-sm font-medium">5</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">$40.00/hr</td>
+                                    <td class="py-3 px-4 text-right">$25.00/hr</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button class="text-primary hover:text-primary/80 mr-2">
+                                            <i class="fas fa-plus-circle"></i>
+                                        </button>
+                                        <button class="text-muted-foreground hover:text-foreground">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-border/50 hover:bg-muted/20" data-mock="true">
+                                    <td class="py-3 px-4 font-medium">Olivia Johnson</td>
+                                    <td class="py-3 px-4">Chemistry</td>
+                                    <td class="py-3 px-4">Sarah Johnson</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="px-3 py-1 bg-destructive/10 text-destructive rounded-full text-sm font-medium">
+                                            3 ⚠️
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">$45.00/hr</td>
+                                    <td class="py-3 px-4 text-right">$30.00/hr</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button class="text-primary hover:text-primary/80 mr-2">
+                                            <i class="fas fa-plus-circle"></i>
+                                        </button>
+                                        <button class="text-muted-foreground hover:text-foreground">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-border/50 hover:bg-muted/20" data-mock="true">
+                                    <td class="py-3 px-4 font-medium">James Smith</td>
+                                    <td class="py-3 px-4">Physics</td>
+                                    <td class="py-3 px-4">Michael Chen</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="px-3 py-1 bg-chart-2/10 text-chart-2 rounded-full text-sm font-medium">12</span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">$40.00/hr</td>
+                                    <td class="py-3 px-4 text-right">$30.00/hr</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button class="text-primary hover:text-primary/80 mr-2">
+                                            <i class="fas fa-plus-circle"></i>
+                                        </button>
+                                        <button class="text-muted-foreground hover:text-foreground">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Rate Management Tab -->
+                <div id="ratesTab" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Rate Management</h3>
+                        <div class="flex space-x-2">
+                            <button class="bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors">
+                                <i class="fas fa-download mr-2"></i>Export Rates
+                            </button>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rate Configuration -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-muted/30 p-6 rounded-lg">
+                            <h4 class="font-semibold mb-4 flex items-center">
+                                <i class="fas fa-user-tie text-primary mr-2"></i>
+                                Tutor Payment Rates
+                            </h4>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span>Math Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="25" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Physics Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="30" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Chemistry Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="30" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-muted/30 p-6 rounded-lg">
+                            <h4 class="font-semibold mb-4 flex items-center">
+                                <i class="fas fa-users text-chart-1 mr-2"></i>
+                                Parent Billing Rates
+                            </h4>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span>Math Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="40" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Physics Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="45" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Chemistry Tutoring</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-muted-foreground">$</span>
+                                        <input type="number" value="45" class="w-20 px-2 py-1 border border-border rounded text-sm">
+                                        <span class="text-sm text-muted-foreground">/hr</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profit Margin Analysis -->
+                    <div class="mt-6 bg-card p-6 rounded-lg border border-border">
+                        <h4 class="font-semibold mb-4 flex items-center">
+                            <i class="fas fa-chart-pie text-chart-2 mr-2"></i>
+                            Profit Margin Analysis
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center p-4 bg-muted/30 rounded">
+                                <p class="text-sm text-muted-foreground">Math Margin</p>
+                                <p class="text-lg font-bold text-chart-2">$15.00 (37.5%)</p>
+                            </div>
+                            <div class="text-center p-4 bg-muted/30 rounded">
+                                <p class="text-sm text-muted-foreground">Physics Margin</p>
+                                <p class="text-lg font-bold text-chart-2">$15.00 (33.3%)</p>
+                            </div>
+                            <div class="text-center p-4 bg-muted/30 rounded">
+                                <p class="text-sm text-muted-foreground">Chemistry Margin</p>
+                                <p class="text-lg font-bold text-chart-2">$15.00 (33.3%)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timesheet Review Tab -->
+                <div id="timesheetsTab" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Timesheet Review & Approval</h3>
+                        <div class="flex space-x-2">
+                            <select class="border border-border rounded-md px-3 py-2 text-sm">
+                                <option>All Tutors</option>
+                                <option>Sarah Johnson</option>
+                                <option>Michael Chen</option>
+                                <option>Emily Davis</option>
+                            </select>
+                            <select class="border border-border rounded-md px-3 py-2 text-sm">
+                                <option>Current Week</option>
+                                <option>Previous Week</option>
+                                <option>All Pending</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pending Timesheets -->
+                    <div class="space-y-4">
+                        <!-- @MAP: pendingTimesheets.map(timesheet => ( -->
+                        <div class="bg-card border border-border rounded-lg p-4" data-mock="true">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-semibold">Sarah Johnson - Week of Dec 16, 2024</h4>
+                                    <p class="text-sm text-muted-foreground">Submitted: Dec 20, 2024 at 3:45 PM</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 bg-destructive/10 text-destructive rounded-md text-sm hover:bg-destructive/20">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                    <button class="px-3 py-1 bg-chart-2/10 text-chart-2 rounded-md text-sm hover:bg-chart-2/20">
+                                        <i class="fas fa-check mr-1"></i>Approve
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-border">
+                                            <th class="text-left py-2">Date</th>
+                                            <th class="text-left py-2">Student</th>
+                                            <th class="text-left py-2">Subject</th>
+                                            <th class="text-right py-2">Duration</th>
+                                            <th class="text-right py-2">Tutor Pay</th>
+                                            <th class="text-right py-2">Parent Bill</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-border/50">
+                                            <td class="py-2">Dec 18</td>
+                                            <td class="py-2">Emma Watson</td>
+                                            <td class="py-2">Math</td>
+                                            <td class="py-2 text-right">1.0h</td>
+                                            <td class="py-2 text-right">$25.00</td>
+                                            <td class="py-2 text-right">$40.00</td>
+                                        </tr>
+                                        <tr class="border-b border-border/50">
+                                            <td class="py-2">Dec 17</td>
+                                            <td class="py-2">James Smith</td>
+                                            <td class="py-2">Physics</td>
+                                            <td class="py-2 text-right">1.5h</td>
+                                            <td class="py-2 text-right">$45.00</td>
+                                            <td class="py-2 text-right">$67.50</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="border-t-2 border-border bg-muted/30">
+                                            <td colspan="4" class="py-2 font-medium">Total</td>
+                                            <td class="py-2 text-right font-bold">$70.00</td>
+                                            <td class="py-2 text-right font-bold">$107.50</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+
+                <!-- Invoices & Payments Tab -->
+                <div id="invoicesTab" class="p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Invoices & Payment Management</h3>
+                        <div class="flex space-x-2">
+                            <button class="bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors">
+                                <i class="fas fa-file-export mr-2"></i>Export to QuickBooks
+                            </button>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Generate Invoices
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Tutor Payments -->
+                        <div class="bg-card border border-border rounded-lg p-6">
+                            <h4 class="font-semibold mb-4 flex items-center">
+                                <i class="fas fa-hand-holding-usd text-primary mr-2"></i>
+                                Tutor Payments - This Week
+                            </h4>
+                            <div class="space-y-3">
+                                <!-- @MAP: tutorPayments.map(payment => ( -->
+                                <div class="flex justify-between items-center p-3 bg-muted/30 rounded" data-mock="true">
+                                    <div>
+                                        <p class="font-medium">Sarah Johnson</p>
+                                        <p class="text-sm text-muted-foreground">14 sessions, 16.5 hours</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-lg">$342.50</p>
+                                        <button class="text-xs text-primary hover:text-primary/80">Generate Pay Stub</button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-muted/30 rounded" data-mock="true">
+                                    <div>
+                                        <p class="font-medium">Michael Chen</p>
+                                        <p class="text-sm text-muted-foreground">10 sessions, 12 hours</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-lg">$300.00</p>
+                                        <button class="text-xs text-primary hover:text-primary/80">Generate Pay Stub</button>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-border">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">Total Tutor Payments</span>
+                                    <span class="font-bold text-xl">$1,240.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Parent Invoices -->
+                        <div class="bg-card border border-border rounded-lg p-6">
+                            <h4 class="font-semibold mb-4 flex items-center">
+                                <i class="fas fa-file-invoice text-chart-1 mr-2"></i>
+                                Parent Invoices - This Week
+                            </h4>
+                            <div class="space-y-3">
+                                <!-- @MAP: parentInvoices.map(invoice => ( -->
+                                <div class="flex justify-between items-center p-3 bg-muted/30 rounded" data-mock="true">
+                                    <div>
+                                        <p class="font-medium">Watson Family</p>
+                                        <p class="text-sm text-muted-foreground">Emma - 3 Math sessions</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-lg">$120.00</p>
+                                        <button class="text-xs text-primary hover:text-primary/80">Send Invoice</button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-muted/30 rounded" data-mock="true">
+                                    <div>
+                                        <p class="font-medium">Smith Family</p>
+                                        <p class="text-sm text-muted-foreground">James - 2 Physics sessions</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-lg">$112.50</p>
+                                        <button class="text-xs text-primary hover:text-primary/80">Send Invoice</button>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-border">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">Total Parent Invoices</span>
+                                    <span class="font-bold text-xl">$1,890.50</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-sm text-muted-foreground">Profit Margin</span>
+                                    <span class="font-semibold text-chart-2">$650.50 (34.4%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: AdminDashboard -->
+    </div>
+
+    <script>
+        (function() {
+            // Role switching functionality
+            const tutorRole = document.getElementById('tutorRole');
+            const adminRole = document.getElementById('adminRole');
+            const tutorView = document.getElementById('tutorView');
+            const adminView = document.getElementById('adminView');
+
+            function switchToTutor() {
+                tutorRole.className = 'px-3 py-1 rounded-md text-sm font-medium bg-primary text-primary-foreground transition-all';
+                adminRole.className = 'px-3 py-1 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-all';
+                tutorView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+            }
+
+            function switchToAdmin() {
+                adminRole.className = 'px-3 py-1 rounded-md text-sm font-medium bg-primary text-primary-foreground transition-all';
+                tutorRole.className = 'px-3 py-1 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-all';
+                adminView.classList.remove('hidden');
+                tutorView.classList.add('hidden');
+            }
+
+            tutorRole.addEventListener('click', switchToTutor);
+            adminRole.addEventListener('click', switchToAdmin);
+
+            // Admin tab switching
+            const tabButtons = document.querySelectorAll('[data-tab]');
+            const tabContents = {
+                'students': document.getElementById('studentsTab'),
+                'rates': document.getElementById('ratesTab'),
+                'timesheets': document.getElementById('timesheetsTab'),
+                'invoices': document.getElementById('invoicesTab')
+            };
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Update button styles
+                    tabButtons.forEach(btn => {
+                        btn.className = 'px-6 py-4 text-sm font-medium text-muted-foreground hover:text-foreground';
+                    });
+                    this.className = 'px-6 py-4 text-sm font-medium border-b-2 border-primary text-primary';
+
+                    // Show/hide tab contents
+                    Object.values(tabContents).forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    tabContents[targetTab].classList.remove('hidden');
+                });
+            });
+
+            // TODO: Implement form submission handlers
+            // TODO: Add data validation for timesheet entries
+            // TODO: Connect to backend API for student/session data
+            // TODO: Implement session balance tracking
+            // TODO: Add invoice generation logic
+            // TODO: Implement rate calculation and profit margin updates
+        })();
+    </script>
+</body>
+</html>
